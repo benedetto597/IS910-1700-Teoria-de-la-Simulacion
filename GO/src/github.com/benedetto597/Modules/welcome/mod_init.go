@@ -1,3 +1,10 @@
+/*
+	@author benedetto597
+	@date 2020-04-21
+	@version 1.0.0
+	@description Paquete "welcome" con funciones de saludo
+
+*/
 package welcome
 
 import "fmt"
