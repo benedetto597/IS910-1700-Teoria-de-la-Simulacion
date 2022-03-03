@@ -37,3 +37,14 @@ Para poder ejecutar código GO desde una carpeta en especifico, esta debe estár
    ```go
    ./<NombrePrograma.go>
    ```
+### Modulos | Paquetes
+
+Al crear un **modulo** con el comando 
+   ```go
+   go mod init <NombreModulo>
+   ```
+Se crea un archivo con el nombre de go.mod que contiene la información del modulo junto a sus dependencias
+
+Los **paquetes** deben ser nombrados en **mayuscula** para que puedan ser exportados correctamente y la carpeta que contenga a un conjunto de paquetes debe llevar **el mismo nombre que el paquete**
+
+
