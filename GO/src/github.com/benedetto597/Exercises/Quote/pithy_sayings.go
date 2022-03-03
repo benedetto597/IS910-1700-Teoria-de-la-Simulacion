@@ -8,4 +8,6 @@ import (
 
 func main() {
 	fmt.Println(quote.Go())
+	fmt.Println(quote.Glass())
+	fmt.Println(quote.Opt())
 }
