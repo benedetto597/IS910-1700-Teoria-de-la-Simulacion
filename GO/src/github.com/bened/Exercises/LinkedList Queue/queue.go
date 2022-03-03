@@ -8,7 +8,7 @@
 
 */
 
-package linkedlistqueue
+package main
 
 import (
 	"fmt"
