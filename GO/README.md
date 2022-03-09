@@ -1,6 +1,4 @@
-# 
-
-    
+<div>  
 <!-- Encabezado -->
 ## IS910-1700-Teoria de la Simulacion
 ### I PAC 2022  
@@ -47,4 +45,10 @@ Se crea un archivo con el nombre de go.mod que contiene la información del modu
 
 Los **paquetes** deben ser nombrados en **mayuscula** para que puedan ser exportados correctamente y la carpeta que contenga a un conjunto de paquetes debe llevar **el mismo nombre que el paquete**
 
+### Rabbit-mq
+
+En la terminal
+```
+go get github.com/streadway/amqp
+``` 
 

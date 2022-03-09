@@ -1,3 +1,7 @@
+1295669
+github.com/streadway/amqp v1.0.0 h1:kuuDrUJFZL1QYL9hUNuCxNObNzB0bV/ZG5jV3RWAQgo=
+github.com/streadway/amqp v1.0.0/go.mod h1:AZpEONHx3DKn8O/DFsRAY58/XVQiIPMTMB1SddzLXVw=
+
 go.sum database tree
 9509637
 lvMCw2VQXLyV8Bo1NYlXqSlVz7BY2UOJSuuc22qbkEU=
