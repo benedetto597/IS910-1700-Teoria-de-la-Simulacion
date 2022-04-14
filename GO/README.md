@@ -1,9 +1,13 @@
-<div>  
+<div align="center"> 
+<img src="https://miro.medium.com/max/1400/1*vt1QOOPkyG3frC3Qg5Htvg.jpeg" width="300px"> </img> 
+
+
 <!-- Encabezado -->
 ## IS910-1700-Teoria de la Simulacion
 ### I PAC 2022  
 ### Seccción 1701
 ### Autor 
+
 | Nombre | Numero De Cuenta | Correo Institucional |
 |:-------------:| :-----:|:-----:|
 | Edgar Josué Benedetto Godoy | `20171033802` | [UNAH](mailto:edgar.benedetto@unah.hn) |
@@ -51,4 +55,6 @@ En la terminal
 ```
 go get github.com/streadway/amqp
 ``` 
+### Documentación
 
+* [Go Documentación](https://pkg.go.dev/strconv)
