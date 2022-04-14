@@ -22,7 +22,7 @@ func main() {
 		os.Exit(3)
 	}
 	// Pedir la 2da semilla al usuario
-	fmt.Println("Ingrese la primer semilla (X00): ")
+	fmt.Println("Ingrese la segunda semilla (X00): ")
 	entry2, _ := reader.ReadString('\n')
 	strSeed2 := strings.TrimRight(entry2, "\r\n") // Remove \n and \r
 	if len(strSeed2) != len(strSeed1) {

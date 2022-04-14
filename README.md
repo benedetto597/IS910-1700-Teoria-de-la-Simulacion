@@ -1,6 +1,6 @@
 # 
 <div align="center">
-    <img src="https://es.mathworks.com/help/matlab/visualize/creating3dplotsexample_02_es.png" width="300px"> </img> 
+    <img src="https://0901.static.prezi.com/preview/v2/wvgzdbwcv3sbebmynyjczngiwp6jc3sachvcdoaizecfr3dnitcq_3_0.png" width="300px"> </img> 
     
 <!-- Encabezado -->
 ## IS910-1700-Teoria de la Simulacion
@@ -10,7 +10,7 @@
 
 | Nombre | Correo |
 |:-------------:| :-----:|
-|  Claudio José Paz Fonseca | [GMAIL](mailto: cjosepfonseca@gmail.com) |
+|  Claudio José Paz Fonseca | [Gmail](mailto:cjosepfonseca@gmail.com) |
 
 
 ### Estudiante 
