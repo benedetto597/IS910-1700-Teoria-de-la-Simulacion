@@ -13,15 +13,14 @@
 |:-------------:| :-----:|
 |  Claudio José Paz Fonseca | [Gmail](mailto:cjosepfonseca@gmail.com) |
 
-
 ### Integrantes 
 | Nombre | Numero De Cuenta |
 |:-------------:| :-----:|
 | Edgar Josué Benedetto Godoy | `20171033802` |
 | Tiffany Monique Matamoros Gonzalez | `20181002925` |
-| William Alberto Gómez López | 20161900396 |
-| Yohelis Lindeth Ordoñez Alvarez | 20161002245 |
-| Jose Luis Maradiaga Zambrano | 20091011842 |
+| William Alberto Gómez López | `20161900396` |
+| Yohelis Lindeth Ordoñez Alvarez | `20161002245` |
+| Jose Luis Maradiaga Zambrano | `20091011842` |
 
 </div>
 
@@ -35,7 +34,12 @@ ______
 3. El numero de recursos que serán asignados en las estaciones.
 
 #### Generación de datos aleatorios
-1. Las llegadas de los pacientes serán generadas de manera aleatoria dentro del rango de tiempo especificado
+1. La política de asignación del recurso que aplica la vacuna en cada estación es aleatoria en función al numero de recursos suministrado al algoritmo
+   * Cualquier recurso pudiese estar asignado a la estación dependiendo a la disponibilidad y este a su vez rotar el turno cada 6 horas.
+   *  **Ejemplo**
+      * Se recibe como parámetro 5 estaciones y 8 recursos, 5 de estos estarán asignados a las estaciones y 3 de ellos en espera a ser asignados al efectuarse el cambio de turno.
+       * Nota: en este ejemplo, al efectuarse el cambio de turno 3 estaciones estarían disponibles y las otras 2 estarían inhabilitadas, hasta el próximo cambio de turno.
+1. Las llegadas de los pacientes será generadas de manera aleatoria dentro del rango de tiempo especificado
    * La frecuencia de llegada por minuto esta especificada por la siguiente tabla, dependiendo al intervalo de tiempo:
 
     | Intervalo de tiempo | Frecuencia por minuto |  
@@ -47,14 +51,13 @@ ______
     | 1:31 PM a 6:30 PM | 0.73 | 
     | 6:30 PM a 8:00 PM | 0.88 | 
 
-2. La llegada de los pacientes serán enviados de manera aleatoria a cada una de las estaciones.
-3. La política de asignación del recurso que aplica la vacuna en cada estación es aleatoria en función al numero de recursos suministrado al algoritmo
-   * Cualquier recurso pudiese estar asignado a la estación dependiendo a la disponibilidad y este a su vez rotar el turno cada 6 horas.
+1. La llegada de los pacientes serán enviados de manera aleatoria a cada una de las estaciones.
+1. Decidir aleatoriamente el tiempo de atención que se le da al paciente para inahibilitar la estación en ese rango de tiempo.
 
 #### Consideraciones
 * El tiempo de duración de la atención se distribuye de manera uniforme entre 5 y 10 minutos, tiempo en el cual la estación de atención queda inhabilitada para atender a otro paciente.
 
-#### Ejemplo
-* Se recibe como parámetro 5 estaciones y 8 recursos, 5 de estos estarán asignados a las estaciones y 3 de ellos en espera a ser asignados al efectuarse el cambio de turno.
-    * Nota: en este ejemplo, al efectuarse el cambio de turno 3 estaciones estarían disponibles y las otras 2 estarían inhabilitadas, hasta el próximo cambio de turno. 
 
+
+#### Evaluación
+![image](https://drive.google.com/uc?export=view&id=1WFU3rZzyZ3uq7Nw9tS4LdhoT3sWvwH_T)
