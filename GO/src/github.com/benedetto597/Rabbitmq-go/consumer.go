@@ -23,12 +23,12 @@ func main() {
 	defer channel.Close()
 
 	queue, err := channel.QueueDeclare(
-		"IS-910", // name of the queue
-		false,    // durable or persistent
-		false,    // delete when is used
-		false,    // exclusive
-		false,    // timeout
-		nil,      // arguments
+		"Resourse", // name of the queue
+		false,      // durable or persistent
+		false,      // delete when is used
+		false,      // exclusive
+		false,      // timeout
+		nil,        // arguments
 	)
 
 	if err != nil {

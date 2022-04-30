@@ -41,6 +41,7 @@ type Patient struct {
 	Name          string
 	ArriveTime    int
 	AttentionTime int
+	Attended      bool
 }
 
 type Parameters struct {
@@ -51,6 +52,17 @@ type Parameters struct {
 	Resources    []Resource
 }
 
+type Result struct {
+	Day                           int
+	TotalPatients                 int
+	AttendedPatients              int
+	UnattendedPatients            int
+	AttendedPatientsTimeTotal     int
+	UnattendedPatientsTimeTotal   int
+	AttendedPatientsTimeAverage   float64
+	UnattendedPatientsTimeAverage float64
+}
+
 func RemoveInPos(a []int, i int) []int {
 	a[i] = a[len(a)-1]
 	return a[:len(a)-1]
@@ -58,31 +70,21 @@ func RemoveInPos(a []int, i int) []int {
 
 func main() {
 
-	fmt.Println("*****************************************************************************************************")
-	fmt.Println("Proyecto de Implementación y evaluación de centro de vacunación en la ciudad de Tegucigalpa, Honduras")
-	fmt.Println("*****************************************************************************************************")
-
 	//Crear Parametros
-	parameters := CreateParameters()
-
+	Parameters := CreateParameters()
+	var Results []Result
 	// Moverse por días simulados
-	for i := 0; i < parameters.Qtydays; i++ {
-		fmt.Println(".....................................................................................................")
-		fmt.Printf("                                           Dia No. %d \n", i+1)
-		fmt.Println(".....................................................................................................")
+	for i := 0; i < Parameters.Qtydays; i++ {
 
 		var RandomFloat float64
-		var Pat int
+		Pat := 1
 		// Resultados de eficiencia en la atención
-		var NonAttendedPatients []Patient
 		var AttendedPatients []Patient
-		var OneInterval int
-		var TwoInterval int
-		var ThreeInterval int
-		var FiveInterval int
-		var SixInterval int
+		var UnattendedPatients []Patient
 		var AttendedPatientsTimeTotal int
-		var NonAttendedPatientsTimeTotal int
+		var UnattendedPatientsTimeTotal int
+		var AttendedPatientsTimeAverage float64
+		var UnattendedPatientsTimeAverage float64
 
 		// Resultados de eficiencia en gestión de recursos y estaciones
 		var NewPatient Patient
@@ -91,163 +93,161 @@ func main() {
 		// Los turnos son de 6 horas o 360 minutos por día laboral (930 minutos)
 		for mins := 1; mins <= 930; mins++ {
 
+			fmt.Println("\nMinuto: ", mins)
 			//Crear Colas En RabiitMQ
-			for _, param := range parameters.Stations {
+			for _, param := range Parameters.Stations {
 				CreateQueue(param.Name)
 			}
 			// Inicio de Turno o cambios de turno
 			if mins == 1 || mins == 360 || mins == 720 {
 				// Asignar recursos a estaciones
-
-				fmt.Println("-----------------------------------------------------------------------------------------------------")
-				fmt.Println("                                     Asignación de Recursos                                          ")
-				fmt.Println("-----------------------------------------------------------------------------------------------------")
-				parameters = AssignResourceStation(parameters)
+				Parameters = AssignResourceStation(Parameters)
 			} else if mins == 930 {
 				//Reiniciar Parametros
-				parameters := ResetParameters(parameters)
+				parameters := ResetParameters(Parameters)
 
 				// Eliminar las colas En RabiitMQ
 				for _, param := range parameters.Stations {
 					DeleteQueue(param.Name)
 				}
+
+				AttendedPatientsTimeAverage = float64(AttendedPatientsTimeTotal) / float64(len(AttendedPatients))
+				UnattendedPatientsTimeAverage = float64(UnattendedPatientsTimeTotal) / float64(len(UnattendedPatients))
+
+				Result := Result{
+					Day:                           i + 1,
+					TotalPatients:                 len(AttendedPatients) + len(UnattendedPatients),
+					AttendedPatients:              len(AttendedPatients),
+					UnattendedPatients:            len(UnattendedPatients),
+					AttendedPatientsTimeTotal:     AttendedPatientsTimeTotal,
+					UnattendedPatientsTimeTotal:   UnattendedPatientsTimeTotal,
+					AttendedPatientsTimeAverage:   AttendedPatientsTimeAverage,
+					UnattendedPatientsTimeAverage: UnattendedPatientsTimeAverage,
+				}
+
+				fmt.Println("\n")
+				fmt.Println("--------------------------------------------------------------------------------------")
+				fmt.Println("Resultados del día: ", i+1)
+				fmt.Println("Total de pacientes: ", Result.TotalPatients)
+				fmt.Println("Pacientes atendidos: ", Result.AttendedPatients)
+				fmt.Println("Pacientes no atendidos: ", Result.UnattendedPatients)
+				fmt.Println("Tiempo promedio de atención de pacientes atendidos: ", Result.AttendedPatientsTimeAverage)
+				fmt.Println("Tiempo promedio de atención de pacientes no atendidos: ", Result.UnattendedPatientsTimeAverage)
+				fmt.Println("Tiempo total de atención de pacientes atendidos: ", Result.AttendedPatientsTimeTotal)
+				fmt.Println("Tiempo total de atención de pacientes no atendidos: ", Result.UnattendedPatientsTimeTotal)
+				fmt.Println("--------------------------------------------------------------------------------------")
+				fmt.Println("\n")
+
+				Results = append(Results, Result)
+				AttendedPatientsTimeTotal = 0
+				UnattendedPatientsTimeTotal = 0
+				AttendedPatientsTimeAverage = 0
+				UnattendedPatientsTimeAverage = 0
+				AttendedPatients = nil
+				UnattendedPatients = nil
+				Pat = 1
+
 			} else if mins <= 180 {
 				rand.Seed(int64(time.Now().UnixNano()))
 				RandomFloat = rand.Float64()
 				if RandomFloat > 0.31 {
-					Pat++
-					OneInterval++
 					NewPatient = CreatePatient(Pat, mins)
-					NonAttendedPatients = append(NonAttendedPatients, NewPatient)
-
+					Pat++
 				}
-
 			} else if mins > 180 && mins <= 360 {
 				rand.Seed(int64(time.Now().UnixNano()))
 				RandomFloat = rand.Float64()
 				if RandomFloat > 0.46 {
-					Pat++
-					TwoInterval++
 					NewPatient = CreatePatient(Pat, mins)
-					NonAttendedPatients = append(NonAttendedPatients, NewPatient)
-
+					Pat++
 				}
 			} else if mins > 360 && mins <= 450 {
 				rand.Seed(int64(time.Now().UnixNano()))
 				RandomFloat = rand.Float64()
 				if RandomFloat > 0.55 {
-					Pat++
-					ThreeInterval++
 					NewPatient = CreatePatient(Pat, mins)
-					NonAttendedPatients = append(NonAttendedPatients, NewPatient)
+					Pat++
 				}
-			} else if mins > 540 && mins <= 840 {
+			} else if mins >= 540 && mins <= 840 {
 				rand.Seed(int64(time.Now().UnixNano()))
 				RandomFloat = rand.Float64()
 				if RandomFloat > 0.73 {
-					Pat++
-					FiveInterval++
 					NewPatient = CreatePatient(Pat, mins)
-					NonAttendedPatients = append(NonAttendedPatients, NewPatient)
-
+					Pat++
 				}
 			} else if mins > 840 && mins < 930 {
 				rand.Seed(int64(time.Now().UnixNano()))
 				RandomFloat = rand.Float64()
 				if RandomFloat > 0.88 {
-					Pat++
-					SixInterval++
 					NewPatient = CreatePatient(Pat, mins)
-					NonAttendedPatients = append(NonAttendedPatients, NewPatient)
-
+					Pat++
 				}
 			}
-
-			//time.Sleep(time.Duration(mins) * time.Millisecond)
-
 			//-------------------------------------------------------------------------------
-
 			IndexActiveStations := []int{}
-			for index, param := range parameters.Stations {
-				if param.Status == true && param.Taken == false {
+			for index, param := range Parameters.Stations {
+				if param.Taken == false && param.Status == true {
 					IndexActiveStations = append(IndexActiveStations, index)
 				}
 			}
 
-			if len(NonAttendedPatients) == 0 {
-
-			}
-
-			if mins <= 450 || mins > 540 {
-
-				if len(IndexActiveStations) > 0 && len(NonAttendedPatients) > 0 {
-					parameters = AssignPatient(mins, NonAttendedPatients[0], parameters, IndexActiveStations)
-					NonAttendedPatients = RemovePatient(NonAttendedPatients, 0)
-					AttendedPatientsTimeTotal++
-
-				} else {
-
-					NonAttendedPatientsTimeTotal += NewPatient.AttentionTime
+			if NewPatient.Name != "" && len(IndexActiveStations) > 0 {
+				rand.Seed(int64(time.Now().UnixNano()))
+				RandomStation := rand.Intn(len(IndexActiveStations))
+				SelectedStation := Parameters.Stations[IndexActiveStations[RandomStation]]
+				PatientAttended := false
+				for index, param := range Parameters.Stations {
+					if SelectedStation.Id != param.Id && Parameters.Stations[index].Patients.Id == NewPatient.Id {
+						PatientAttended = true
+					}
+				}
+				if SelectedStation.Taken == false && PatientAttended == false {
+					TotalMins := NewPatient.ArriveTime + NewPatient.AttentionTime
+					if TotalMins < 360 || (TotalMins > 370 && TotalMins < 450) || (TotalMins > 540 && TotalMins < 720) || (TotalMins > 730 && TotalMins < 930) {
+						Parameters = AssignPatient(NewPatient, Parameters, SelectedStation.Id-1)
+					} else {
+						UnattendedPatients = append(UnattendedPatients, NewPatient)
+						UnattendedPatientsTimeTotal += NewPatient.AttentionTime
+					}
 				}
 
+			} else if NewPatient.Name != "" && len(IndexActiveStations) == 0 {
+				UnattendedPatients = append(UnattendedPatients, NewPatient)
+				UnattendedPatientsTimeTotal += NewPatient.AttentionTime
 			}
-			//-------------------------------------------------------------------------------
 
+			//-------------------------------------------------------------------------------
 			// Verificar si hay pacientes en la estación
-			for index, param := range parameters.Stations {
+			for index, param := range Parameters.Stations {
 				// Verificar si el paciente ya está atendido
 				if param.Patients.ArriveTime+param.Patients.AttentionTime == mins {
-
-					AttendedPatients = append(AttendedPatients, param.Patients)
-					parameters.Stations[index].Taken = false
-					parameters.Stations[index].Patients = Patient{}
+					ExitTime := Parameters.Stations[index].Patients.ArriveTime + Parameters.Stations[index].Patients.AttentionTime
+					fmt.Printf("\nSaliendo de la %s el %s a los %d minutos", Parameters.Stations[index].Name, Parameters.Stations[index].Patients.Name, ExitTime)
+					AttendedPatients = append(AttendedPatients, Parameters.Stations[index].Patients)
+					AttendedPatientsTimeTotal += Parameters.Stations[index].Patients.AttentionTime
+					Parameters.Stations[index].Taken = false
 					Consumer(param.Name)
-
+					fmt.Printf("\n[x] %s saliendo de la cola\n", Parameters.Stations[index].Patients.Name)
+					Parameters.Stations[index].Patients = Patient{}
 				}
 			}
-
-			if mins == 930 {
-				fmt.Println("-----------------------------------------------------------------------------------------------------")
-				fmt.Println("                                         Informe Final del Día ")
-				fmt.Println("-----------------------------------------------------------------------------------------------------")
-
-				fmt.Println("\n                                      Pacientes Generados  Por Intervalos")
-				fmt.Println("_____________________________________________________________________________________________________")
-
-				fmt.Printf("Pacientes Generados de 4:30 AM a 7:30 AM: %d \n", OneInterval)
-				fmt.Printf("Pacientes Generados de 7:31 AM a 10:30 AM: %d \n", TwoInterval)
-				fmt.Printf("Pacientes Generados de 10.31 AM a 12:00 M: %d \n", ThreeInterval)
-				fmt.Printf("Pacientes Generados de 12:00 AM a 1:30 PM: 0 \n")
-				fmt.Printf("Pacientes Generados de 1:31 PM a 6:30 PM: %d \n", FiveInterval)
-				fmt.Printf("Pacientes Generados de 6:30 PM a 8:00 PM : %d \n", SixInterval)
-
-				fmt.Println("\n                                      Datos Generales")
-				fmt.Println("_____________________________________________________________________________________________________")
-				fmt.Printf("Número de Estaciones: %d \n", parameters.Qtystations)
-				fmt.Printf("Número de Recurso: %d \n", parameters.Qtyresources)
-				fmt.Printf("Total de Pacientes que llegaron: %d \n", Pat)
-				fmt.Printf("Cantidad de Pacientes Atendidos: %d \n", AttendedPatientsTimeTotal)
-				fmt.Printf("Cantidad de Pacientes no Atendidos: %d \n\n", len(NonAttendedPatients))
-
-			}
-
+			//time.Sleep(time.Duration(mins) * time.Millisecond)
 		}
 	}
 }
 
-func AssignPatient(mins int, patient Patient, parameters Parameters, IndexActiveStations []int) Parameters {
+func AssignPatient(patient Patient, parameters Parameters, IndexActiveStation int) Parameters {
 	// Asignar paciente a la estación que le corresponde
-	rand.Seed(int64(time.Now().UnixNano()))
-	RandomStation := rand.Intn(len(IndexActiveStations))
 
-	if parameters.Stations[IndexActiveStations[RandomStation]].Taken == false {
+	parameters.Stations[IndexActiveStation].Patients.Id = patient.Id
+	parameters.Stations[IndexActiveStation].Patients.Name = patient.Name
+	parameters.Stations[IndexActiveStation].Patients.ArriveTime = patient.ArriveTime
+	parameters.Stations[IndexActiveStation].Patients.AttentionTime = patient.AttentionTime
+	parameters.Stations[IndexActiveStation].Patients.Attended = true
+	parameters.Stations[IndexActiveStation].Taken = true
+	fmt.Printf("\nEntrando a la %s el %s a los %d minutos\n", parameters.Stations[IndexActiveStation].Name, parameters.Stations[IndexActiveStation].Patients.Name, parameters.Stations[IndexActiveStation].Patients.ArriveTime)
+	Producer(parameters.Stations[IndexActiveStation].Name, parameters.Stations[IndexActiveStation].Patients.Name)
 
-		parameters.Stations[IndexActiveStations[RandomStation]].Patients = patient
-		parameters.Stations[IndexActiveStations[RandomStation]].Patients.ArriveTime = mins
-		parameters.Stations[IndexActiveStations[RandomStation]].Taken = true
-		Producer(parameters.Stations[IndexActiveStations[RandomStation]].Name, parameters.Stations[IndexActiveStations[RandomStation]].Patients.Name)
-
-	}
 	return parameters
 }
 
@@ -257,14 +257,13 @@ func CreatePatient(id int, mins int) Patient {
 	max := 10
 	min := 5
 	radomAttention := rand.Intn(max-min) + min
-
 	patient := Patient{
 		Id:            id,
 		Name:          "Paciente " + strconv.Itoa(id),
-		ArriveTime:    0,
+		ArriveTime:    mins,
 		AttentionTime: radomAttention,
+		Attended:      false,
 	}
-
 	return patient
 }
 
@@ -272,12 +271,12 @@ func AssignResourceStation(parameters Parameters) Parameters {
 	// Validar que estaciones están libres para usarse en el siguiente turnos
 	AvaibleStations := []int{}
 	for i := 0; i < len(parameters.Stations); i++ {
-		//	if parameters.Stations[i].Status == false {
-		AvaibleStations = append(AvaibleStations, i)
-		//	} else {
-		// Cambiar el estado de las estaciones a libre
-		//	parameters.Stations[i].Status = false
-		//}
+		if parameters.Stations[i].Status == false {
+			AvaibleStations = append(AvaibleStations, i)
+		} else {
+			// Cambiar el estado de las estaciones a libre
+			parameters.Stations[i].Status = false
+		}
 
 	}
 
@@ -285,11 +284,6 @@ func AssignResourceStation(parameters Parameters) Parameters {
 	AvaibleResources := []int{}
 
 	for i := 0; i < len(parameters.Resources); i++ {
-		if len(parameters.Resources) < len(parameters.Stations) {
-			parameters.Resources[i].Status = false
-
-		}
-
 		if parameters.Resources[i].Status == false {
 
 			AvaibleResources = append(AvaibleResources, i)
@@ -300,55 +294,63 @@ func AssignResourceStation(parameters Parameters) Parameters {
 	}
 
 	// Seleccionar los recursos y estaciones a asignar en el siguiente turno
-
+	fmt.Println("\nEstaciones Disponibles: ", AvaibleStations)
+	fmt.Println("Recursos Disponibles: ", AvaibleResources)
 	AssignedS := ToAssign(AvaibleStations)
 	AssignedR := ToAssign(AvaibleResources)
 	//AcceptedLen := false
 
-	//Asignar Recursos A las estaciones
-	rand.Seed(int64(time.Now().UnixNano()))
-	//centinel:=len(AssignedR)
-	i := false
-
-	for _, param := range parameters.Resources {
-		for i == false {
-
-			if param.Status == false {
-				var randomIndexS int
-				var randomIndexR int
-
-				if len(AssignedS) == 1 {
-					randomIndexS = 0
-					i = true
-				} else {
-					randomIndexS = rand.Intn(len(AssignedS))
-				}
-
-				if len(AssignedR) == 1 {
-					randomIndexR = 0
-					i = true
-
-				} else {
-					randomIndexR = rand.Intn(len(AssignedR))
-				}
-
-				randomS := AssignedS[randomIndexS]
-				randomR := AssignedR[randomIndexR]
-
-				parameters.Stations[randomS].Resource.Id = parameters.Resources[randomR].Id
-				parameters.Stations[randomS].Resource.Name = parameters.Resources[randomR].Name
-				parameters.Stations[randomS].Resource.Status = true
-				//Cambio de Estado Recursos & Estaciones
-				parameters.Resources[randomR].Status = true
-				parameters.Stations[randomS].Status = true
-
-				AssignedR = RemoveInPos(AssignedR, randomIndexR)
-				AssignedS = RemoveInPos(AssignedS, randomIndexS)
-
-				fmt.Printf("Estación  %d : %s \n", parameters.Stations[randomS].Id, parameters.Stations[randomS].Resource.Name)
-
-			}
+	/*for AcceptedLen == false {
+		if len(AssignedR) <= len(AssignedS) && len(AssignedR) > 0 {
+			AcceptedLen = true
+		} else {
+			AssignedR = ToAssign(AvaibleResources)
 		}
+	}*/
+
+	fmt.Printf("\nPosibles estaciones a asignar: %d", AssignedS)
+	fmt.Printf("\nPosibles recursos a asignar: %d\n", AssignedR)
+
+	//Asignar Recursos a las estaciones
+	rand.Seed(int64(time.Now().UnixNano()))
+	for i := 0; i < len(AssignedR); i++ {
+
+		var randomIndexS int
+		var randomIndexR int
+
+		// Asignar el ultimo recurso o la ultima estación
+		if len(AssignedS) == 1 {
+			randomIndexS = 0
+			i = len(AssignedR)
+		} else {
+			randomIndexS = rand.Intn(len(AssignedS))
+		}
+
+		if len(AssignedR) == 1 {
+			randomIndexR = 0
+			i = len(AssignedR)
+		} else {
+			randomIndexR = rand.Intn(len(AssignedR))
+		}
+
+		randomS := AssignedS[randomIndexS]
+		randomR := AssignedR[randomIndexR]
+
+		// fmt.Printf("\nRandom Index Resource: %d\n", randomR)
+		// fmt.Printf("\nObject Resource: %d\n", parameters.Resources[randomR].Id)
+		if parameters.Stations[randomS].Status == false {
+			parameters.Stations[randomS].Resource.Id = parameters.Resources[randomR].Id
+			parameters.Stations[randomS].Resource.Name = parameters.Resources[randomR].Name
+			parameters.Stations[randomS].Resource.Status = true
+			//Cambio de Estado Recursos & Estaciones
+			parameters.Resources[randomR].Status = true
+			parameters.Stations[randomS].Status = true
+
+			fmt.Printf("\n%s asignado a la %s", parameters.Stations[randomS].Resource.Name, parameters.Stations[randomS].Name)
+		}
+		AssignedR = RemoveInPos(AssignedR, randomIndexR)
+		AssignedS = RemoveInPos(AssignedS, randomIndexS)
+
 	}
 
 	return parameters
@@ -359,15 +361,23 @@ func CreateParameters() Parameters {
 	var parameters Parameters
 	// Pedir al usuario los parametros de entrada de la simulacion
 	// Cantidad de días a simular
-	fmt.Println("Ingrese la cantidad de días a simular: ")
+	fmt.Println("\nIngrese la cantidad de días a simular: ")
 	entry1, _ := reader.ReadString('\n')
 	strDays := strings.TrimRight(entry1, "\r\n") // Remove \n and \r
+	if strDays == "" {
+		fmt.Println("Debe ingresar la cantidad de días a simular")
+		os.Exit(1)
+	}
 	Qtydays, _ := strconv.Atoi(strDays)
 
 	// Cantidad de estaciones --> MAXIMO 15 estaciones
-	fmt.Println("Ingrese la cantidad de estaciones (máximo 15): ")
+	fmt.Println("\nIngrese la cantidad de estaciones (máximo 15): ")
 	entry2, _ := reader.ReadString('\n')
 	strStations := strings.TrimRight(entry2, "\r\n") // Remove \n and \r
+	if strStations == "" {
+		fmt.Println("Debe ingresar la cantidad de estaciones para la simulacion")
+		os.Exit(1)
+	}
 	Qtystations, _ := strconv.Atoi(strStations)
 
 	if Qtystations > 15 {
@@ -376,9 +386,13 @@ func CreateParameters() Parameters {
 	}
 
 	// Cantidad de recursos
-	fmt.Println("Ingrese la cantidad de recursos: ")
+	fmt.Println("\nIngrese la cantidad de recursos: ")
 	entry3, _ := reader.ReadString('\n')
 	strResources := strings.TrimRight(entry3, "\r\n") // Remove \n and \r
+	if strResources == "" {
+		fmt.Println("Debe ingresar la cantidad de recursos para la simulacion")
+		os.Exit(1)
+	}
 	Qtyresources, _ := strconv.Atoi(strResources)
 
 	// Crear las estaciones
@@ -400,7 +414,7 @@ func CreateParameters() Parameters {
 	for i := 1; i <= Qtyresources; i++ {
 		resource := Resource{
 			Id:     i,
-			Name:   "Vacuna " + strconv.Itoa(i),
+			Name:   "Recurso " + strconv.Itoa(i),
 			Status: false,
 		}
 		resources = append(resources, resource)
@@ -435,8 +449,8 @@ func ResetParameters(parameters Parameters) Parameters {
 	for i := 1; i <= parameters.Qtyresources; i++ {
 		resource := Resource{
 			Id:     i,
-			Name:   "Vacuna " + strconv.Itoa(i),
-			Status: true,
+			Name:   "Recurso " + strconv.Itoa(i),
+			Status: false,
 		}
 		resources = append(resources, resource)
 	}
@@ -455,52 +469,20 @@ func ToAssign(Array []int) []int {
 	var Assigned []int
 
 	rand.Seed(int64(time.Now().UnixNano()))
-	j := 0
-	i := 0
-	RandomN := 0
-	var temp []int
-
-	for j < 1 {
-
+	for i := 0; i < len(Array)-1; i++ {
 		Found := false
-
 		RandomL := rand.Intn(len(Array))
-		RandomN = Array[RandomL]
-		sort.Ints(temp)
-		i = sort.SearchInts(temp, RandomN)
-
-		if len(Assigned) > 0 && i < len(temp) {
-
-			if temp[i] == RandomN || temp[0] == RandomN {
-				Found = true
-
-			}
-			if Found == false {
-				Assigned = append(Assigned, RandomN)
-				temp = append(temp, RandomN)
-
-			}
-
-		} else {
-			Assigned = append(Assigned, RandomN)
-			temp = append(temp, RandomN)
-
+		RandomN := Array[RandomL]
+		i := sort.SearchInts(Assigned, RandomN)
+		if i < len(Assigned) && Assigned[i] == RandomN {
+			Found = true
 		}
-		if len(Assigned) == len(Array) {
-			j++
+		if Found == false {
+			Assigned = append(Assigned, RandomN)
 		}
 	}
-
 	return Assigned
 }
-
-func RemovePatient(s []Patient, index int) []Patient {
-	return append(s[:index], s[index+1:]...)
-}
-
-// func remove(s []int, index int) []int {
-// 	return append(s[:index], s[index+1:]...)
-// }
 
 func CreateQueue(Name string) amqp.Queue {
 	connection, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
@@ -594,14 +576,6 @@ func DeleteQueue(Name string) {
 
 }
 
-/*func failOnError(err error, msg string) {
-	if err != nil {
-		log.Fatalf("%s: %s", msg, err)
-		panic(fmt.Sprintf("%s: %s", msg, err))
-	}
-
-}*/
-
 func Producer(Name string, msg string) {
 	connection, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	if err != nil {
@@ -623,14 +597,6 @@ func Producer(Name string, msg string) {
 		false, // timeout
 		nil,
 	)
-	/*	var num int
-		num, err = canal.QueueDelete(
-			queue.Name,
-			false,
-			false,
-			false,
-		)
-		log.Println("[RABBITMQ_CLIENT]", num, "message purged")*/
 
 	if err != nil {
 		log.Fatalf("%s: %s", "Error cuando creamos la queue", err)
@@ -646,7 +612,8 @@ func Producer(Name string, msg string) {
 			ContentType: "text/plain",
 			Body:        []byte(msg),
 		})
-	//log.Printf(" [x] Sent %s", msg)
+
+	fmt.Printf("[x] %s agregado a la cola\n", msg)
 
 	if err != nil {
 		log.Fatalf("%s: %s", "Error cuando enviamos el mensaje", err)
@@ -682,7 +649,7 @@ func Consumer(Name string) {
 		log.Fatalf("%s: %s", "Error creating the queue", err)
 	}
 
-	_, mensaje := channel.Consume(
+	message, err := channel.Consume(
 		queue.Name, // name of the queue
 		"",         // consumer
 		true,       // auto-ack
@@ -693,13 +660,13 @@ func Consumer(Name string) {
 	)
 
 	if err != nil {
-		log.Fatalf("%s: %s", "Error creating the consume channel", mensaje)
+		log.Fatalf("%s: %s", "Error creating the consume channel", err)
 	}
 
 	// Anonymous function to recive messages
-	/*go func() {
+	go func() {
 		for queue := range message {
 			fmt.Printf("\n%s: %s", "Message received", string(queue.Body))
 		}
-	}()*/
+	}()
 }
